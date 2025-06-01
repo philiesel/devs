@@ -1,5 +1,7 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.BookByAuthor;
+import com.example.demo.dto.BookByAuthorsAndCategory;
 import com.example.demo.dto.BookDto;
 import com.example.demo.dto.BookRequestDto;
 import com.example.demo.facade.BookFacade;
@@ -9,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
@@ -51,6 +54,25 @@ public class BookController {
     @GetMapping("/author/{authorId}")
     public ResponseEntity<List<BookDto>> getBooksByAuthor(@PathVariable Long authorId) {
         List<BookDto> books = bookFacade.getBooksByAuthor(authorId);
+        return ResponseEntity.ok(books);
+    }
+
+    @GetMapping("/filter/author-category")
+    public ResponseEntity<List<BookDto>> findByAuthorsAndCategory(
+            @RequestBody BookByAuthorsAndCategory BookByAuthorsAndCategory
+    ) {
+        Set<String> nameAuthor = BookByAuthorsAndCategory.getNameAuthors();
+        String nameCategory = BookByAuthorsAndCategory.getCategory();
+        List<BookDto> books = bookFacade.findBooksByAuthorsAndCategory(nameAuthor, nameCategory);
+        return ResponseEntity.ok(books);
+    }
+
+    @GetMapping("/filter/author-name")
+    public ResponseEntity<List<BookDto>> findByAuthorsName(
+            @RequestBody BookByAuthor bookByAuthor
+    ) {
+        Set<String> nameAuthors = bookByAuthor.getNameAuthors();
+        List<BookDto> books = bookFacade.findByAuthorsName(nameAuthors);
         return ResponseEntity.ok(books);
     }
 }

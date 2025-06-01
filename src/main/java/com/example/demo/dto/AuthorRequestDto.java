@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 public class AuthorRequestDto {
-    @NotNull
+    @NotNull(message = "Имя автора не может быть пустым")
     private String name;
 }

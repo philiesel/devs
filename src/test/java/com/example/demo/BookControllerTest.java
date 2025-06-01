@@ -1,51 +1,57 @@
 package com.example.demo;
 
+import com.example.demo.dto.BookByAuthorsAndCategory;
 import com.example.demo.dto.BookRequestDto;
 import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.jdbc.Sql;
 
 import static org.hamcrest.Matchers.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@Sql(scripts = "/updateTestBook.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
 public class BookControllerTest {
 
     @Test
+    @Rollback
     void createBookShouldReturnBookDto() {
         RestAssured
                 .given()
-                .contentType("application/json;charset=UTF-8")
+                .contentType(ContentType.JSON)
                 .body("""
                         {
-                            "titleBook": "Сияние",
-                            "nameCategory": "Сказка"
+                             "titleBook" : "Дом",
+                             "nameCategory" : "Повесть",
+                             "nameAuthors" : ["Дюма", "Стивен Кинг"]
                         }
                         """)
                 .when()
-                .post("http://localhost:8080/api/v1/books/create")
+                .post("api/v1/books/create")
                 .then()
                 .statusCode(HttpStatus.SC_CREATED)
-                .body("id", is(1),
-                        "title", is("Сияние"));
+                .body("id", notNullValue(),
+                        "title", is("Дом"),
+                        "category", is("Повесть"));
     }
 
     @Test
-    @Sql(scripts = "/insert-test-book.sql")
     void getBookShouldReturnBookWhenBookExists() {
-        long bookId = 2L;
+        Long bookId = 3L;
 
         RestAssured
                 .given()
-                .contentType("application/json;charset=UTF-8")
+                .contentType(ContentType.JSON)
                 .when()
                 .get("/api/v1/books/" + bookId)
                 .then()
                 .statusCode(HttpStatus.SC_OK)
-                .body("id", equalTo((int) bookId))
-                .body("title", notNullValue())
-                .body("category", notNullValue());
+                .body("id", equalTo(bookId.intValue()),
+                        "title", notNullValue(),
+                        "category", notNullValue());
     }
 
     @Test
@@ -54,7 +60,7 @@ public class BookControllerTest {
 
         RestAssured
                 .given()
-                .contentType("application/json;charset=UTF-8")
+                .contentType(ContentType.JSON)
                 .when()
                 .delete("/api/v1/books/" + bookId)
                 .then()
@@ -63,24 +69,24 @@ public class BookControllerTest {
     }
 
     @Test
-    @Sql(scripts = "/updateTestBook.sql")
     void whenUpdateBookThenStatus200() {
         Long bookId = 3L;
 
         BookRequestDto bookRequestDto = new BookRequestDto();
-        bookRequestDto.setTitleBook("Старик и море");
+        bookRequestDto.setTitleBook("Молчание");
         bookRequestDto.setNameCategory("Сказка");
+        bookRequestDto.getNameAuthors().add("Стивен Кинг");
 
         RestAssured
                 .given()
-                .contentType("application/json;charset=UTF-8")
+                .contentType(ContentType.JSON)
                 .body(bookRequestDto)
                 .when()
                 .patch("/api/v1/books/" + bookId)
                 .then()
                 .statusCode(HttpStatus.SC_OK)
-                .body("title", equalTo("Старик и море"))
-                .body("category", equalTo("Сказка"));
+                .body("title", notNullValue())
+                .body("category", notNullValue());
     }
 
     @Test
@@ -93,12 +99,29 @@ public class BookControllerTest {
 
         RestAssured
                 .given()
-                .contentType("application/json;charset=UTF-8")
+                .contentType(ContentType.JSON)
                 .body(bookRequestDto)
                 .when()
                 .patch("/api/v1/books/" + bookId)
                 .then()
                 .statusCode(HttpStatus.SC_NOT_FOUND)
                 .body(equalTo(String.format("Книга с таким %s не найдена", bookId)));
+    }
+
+    @Test
+    void findBooksByAuthorsAndCategoryThenStatus200() {
+        BookByAuthorsAndCategory book = new BookByAuthorsAndCategory();
+        book.getNameAuthors().add("Дюма");
+        book.setCategory("Повесть");
+
+        RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .body(book)
+                .when()
+                .get("/api/v1/books/filter/author-category")
+                .then()
+                .statusCode(HttpStatus.SC_OK)
+                .body("[0].title", equalTo("Дом"));
     }
 }

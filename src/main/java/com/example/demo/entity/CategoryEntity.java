@@ -19,7 +19,7 @@ public class CategoryEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Column(unique = true)
+    @Column(nullable = false, unique = true)
     private String name;
     @OneToMany(mappedBy = "category")
     private List<BookEntity> books = new ArrayList<>();

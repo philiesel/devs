@@ -5,18 +5,18 @@ import com.example.demo.exceptions.AuthorNotFoundException;
 import com.example.demo.repository.AuthorRepository;
 import com.example.demo.service.AuthorService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-@Slf4j
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class AuthorServiceImpl implements AuthorService {
     private final AuthorRepository authorRepository;
 
-    public AuthorEntity createAuthor(String name) {
+    public AuthorEntity createAuthor(String nameAuthor) {
         AuthorEntity author = new AuthorEntity();
-        author.setName(name);
+        author.setName(nameAuthor);
         return authorRepository.save(author);
     }
 
@@ -34,5 +34,11 @@ public class AuthorServiceImpl implements AuthorService {
     public void deleteAuthor(Long id) {
         AuthorEntity authorEntity = getAuthor(id);
         authorRepository.delete(authorEntity);
+    }
+
+    @Override
+    public AuthorEntity findOrCreate(String nameAuthor) {
+        Optional<AuthorEntity> author = authorRepository.findByName(nameAuthor);
+        return author.orElseGet(() -> createAuthor(nameAuthor));
     }
 }

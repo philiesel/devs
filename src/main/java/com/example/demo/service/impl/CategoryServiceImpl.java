@@ -7,7 +7,6 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -17,7 +16,6 @@ import java.util.Optional;
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
 
-    @Transactional
     public CategoryEntity createCategory(String categoryName) {
         log.debug("Создание категории с именем {}", categoryName);
         CategoryEntity categoryNew = new CategoryEntity();
@@ -28,9 +26,8 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     public CategoryEntity getById(Long id) {
-        CategoryEntity category = categoryRepository.findById(id)
+        return categoryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Категория не найдена"));
-        return category;
     }
 
     public CategoryEntity findOrCreate(String nameCategory) {

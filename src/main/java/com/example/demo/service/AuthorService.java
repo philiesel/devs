@@ -11,4 +11,6 @@ public interface AuthorService {
     AuthorEntity updateAuthor(Long id, String name);
 
     void deleteAuthor(Long id);
+
+    AuthorEntity findOrCreate(String nameAuthor);
 }
